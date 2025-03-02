@@ -3,7 +3,7 @@ import boto3
 from io import BytesIO
 from PIL import Image, ImageDraw
 
-def initialize_aws_session(access_id, access_key, region):
+def initialize_aws_session(access_id, access_key):
     return boto3.Session(
         aws_access_key_id=access_id, 
         aws_secret_access_key=access_key, 
