@@ -7,7 +7,7 @@ from io import BytesIO
 import os
 from PIL import ImageFont
 
-font = ImageFont.load_default()  # Fonte padrão do PIL
+font = ImageFont.truetype("DejaVuSans.ttf", 30) 
 def initialize_aws_session():
     """Inicializa a sessão AWS usando credenciais seguras."""
     return boto3.Session(
