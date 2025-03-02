@@ -110,6 +110,9 @@ uploaded_target = st.file_uploader("Envie a imagem para comparação", type=["jp
 if uploaded_target and bytes_face_cnh:
     bytes_img_target = uploaded_target.read()
     response_comparison = compare_faces(client_rekognition, bytes_face_cnh, bytes_img_target)
+
+    image_target = Image.open(uploaded_target)
+    draw = ImageDraw.Draw(image_target)
     if "FaceMatches" in response_comparison and response_comparison["FaceMatches"]:
         for match in response_comparison["FaceMatches"]:
             box = match["Face"]["BoundingBox"]
