@@ -1,6 +1,6 @@
 import streamlit as st
 from PIL import Image, ImageDraw
-from funcoes import (
+from functions import (
     initialize_aws_session, extract_text, detect_faces, crop_face,
     compare_faces, clean_cpf
 )
