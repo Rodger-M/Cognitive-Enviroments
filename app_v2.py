@@ -70,9 +70,13 @@ if uploaded_cnh:
     st.image(uploaded_cnh, caption="Imagem enviada", use_container_width=True)
     bytes_cnh = uploaded_cnh.read()
     extracted_data = extract_text(client_textract, bytes_cnh)
+
+    nome_keys = ["NOME", "NOME COMPLETO", "NOME DO TITULAR", "CLIENTE", "2E1 NOME E SOBRENOME"]  # Possíveis variações
+    nome_cnh = next((extracted_data[key] for key in nome_keys if key in extracted_data), "Não encontrado")
     
-    nome_cnh = extracted_data.get("NOME", "Não encontrado")
-    cpf_cnh = re.sub(r"[.\-/]", "", extracted_data.get("CPF", "Não encontrado"))
+    cpf_keys = ["CPF", "DOCUMENTO", "CPF DO TITULAR", "CPF/CNPJ", "4D CPF"]
+    cpf_cnh = next((extracted_data[key] for key in cpf_keys if key in extracted_data), "Não encontrado")
+    cpf_cnh = re.sub(r"[.\-/]", "", cpf)
     
     response_faces = detect_faces(client_rekognition, bytes_cnh)
     if "FaceDetails" in response_faces and response_faces["FaceDetails"]:
@@ -149,10 +153,8 @@ if uploaded_endereco:
               extracted_data_comprovante[key_text] = value_text
 
   # Exibir resultados extraídos
-  nome_keys = ["NOME", "NOME COMPLETO", "NOME DO TITULAR", "CLIENTE"]  # Possíveis variações
   nome_comprovante = next((extracted_data_comprovante[key] for key in nome_keys if key in extracted_data_comprovante), "Não encontrado")
 
-  cpf_keys = ["CPF", "DOCUMENTO", "CPF DO TITULAR", "CPF/CNPJ"]
   cpf_comprovante = next((extracted_data_comprovante[key] for key in cpf_keys if key in extracted_data_comprovante), "Não encontrado")
   cpf_comprovante = re.sub(r"[.\-/]", "", cpf_comprovante)
   st.subheader("Texto extraído do comprovante de endereço:")
