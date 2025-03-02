@@ -111,7 +111,14 @@ if uploaded_target and bytes_face_cnh:
     bytes_img_target = uploaded_target.read()
     response_comparison = compare_faces(client_rekognition, bytes_face_cnh, bytes_img_target)
     if "FaceMatches" in response_comparison and response_comparison["FaceMatches"]:
-        st.success(f"Face correspondente encontrada! Similaridade: {response_comparison['FaceMatches'][0]['Similarity']:.2f}%")
+        box = match["Face"]["BoundingBox"]
+        width, height = image_target.size
+        left, top = int(box['Left'] * width), int(box['Top'] * height)
+        box_width, box_height = int(box['Width'] * width), int(box['Height'] * height)
+        draw.rectangle([left, top, left + box_width, top + box_height], outline="green", width=3)
+        draw.text((left, top), f"Similaridade: {match['Similarity']:.2f}%", font=font)
+        st.success(f"Face correspondente encontrada! Similaridade: {match['Similarity']:.2f}%")
+        st.image(image_target, caption="Resultado da Comparação", use_container_width=True)
     else:
         st.error("Nenhuma correspondência encontrada.")
 
