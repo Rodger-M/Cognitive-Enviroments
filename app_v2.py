@@ -5,7 +5,9 @@ import numpy as np
 from PIL import Image, ImageDraw
 from io import BytesIO
 import os
+from PIL import ImageFont
 
+font = ImageFont.load_default()  # Fonte padrão do PIL
 def initialize_aws_session():
     """Inicializa a sessão AWS usando credenciais seguras."""
     return boto3.Session(
@@ -108,7 +110,7 @@ if uploaded_target and bytes_face_cnh:
             left, top = int(box['Left'] * width), int(box['Top'] * height)
             box_width, box_height = int(box['Width'] * width), int(box['Height'] * height)
             draw.rectangle([left, top, left + box_width, top + box_height], outline="green", width=3)
-            draw.text((left, top), f"Similaridade: {match['Similarity']:.2f}%")
+            draw.text((left, top), f"Similaridade: {match['Similarity']:.2f}%", font=font)
             st.success(f"Face correspondente encontrada! Similaridade: {match['Similarity']:.2f}%")
         st.image(image_target, caption="Resultado da Comparação", use_container_width=True)
     else:
