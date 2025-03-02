@@ -94,7 +94,7 @@ if uploaded_cnh:
         bytes_face_cnh = None
         st.warning("Nenhuma face detectada na CNH.")
     
-    st.text_area("Dados extraídos:", f"Nome: {nome_cnh}", height=70)
+    st.text_area("Dados extraídos:", f"Nome: {nome_cnh}\nCPF: {cpf_cnh}", height=70)
 
 # Upload para comparação
 st.subheader("Upload da imagem para comparação")
@@ -158,7 +158,7 @@ if uploaded_endereco:
   cpf_comprovante = next((extracted_data_comprovante[key] for key in cpf_keys if key in extracted_data_comprovante), "Não encontrado")
   cpf_comprovante = re.sub(r"[.\-/]", "", cpf_comprovante)
   st.subheader("Texto extraído do comprovante de endereço:")
-  st.text_area("", f"Nome: {nome_comprovante}\nCPF: {cpf_comprovante}", height=68)
+  st.text_area("", f"Nome: {nome_comprovante}", height=68)
   st.subheader("Resultado:")
 
   if any(nome_cnh in v for v in extracted_data_comprovante.values()):
