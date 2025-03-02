@@ -76,7 +76,7 @@ if uploaded_cnh:
     
     cpf_keys = ["CPF", "DOCUMENTO", "CPF DO TITULAR", "CPF/CNPJ", "4D CPF"]
     cpf_cnh = next((extracted_data[key] for key in cpf_keys if key in extracted_data), "Não encontrado")
-    cpf_cnh = re.sub(r"[.\-/]", "", cpf)
+    cpf_cnh = re.sub(r"[.\-/]", "", cpf_cnh)
     
     response_faces = detect_faces(client_rekognition, bytes_cnh)
     if "FaceDetails" in response_faces and response_faces["FaceDetails"]:
