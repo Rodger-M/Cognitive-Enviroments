@@ -131,9 +131,9 @@ if uploaded_endereco:
   # Convertendo imagem para bytes
   img_endereco = uploaded_endereco.read()
   bytes_endereco = bytearray(img_endereco)
-
+  response_comprovante_text = extract_text(client_textract, bytes_endereco)
   # Inicializando sessão AWS
-  response_comprovante_text = client_textract.analyze_document(Document={'Bytes': bytes_endereco}, FeatureTypes=['FORMS'])
+  #response_comprovante_text = client_textract.analyze_document(Document={'Bytes': bytes_endereco}, FeatureTypes=['FORMS'])
   blocks = response_comprovante_text["Blocks"]
   extracted_data_comprovante = {}
 
