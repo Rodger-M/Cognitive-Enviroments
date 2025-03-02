@@ -9,8 +9,8 @@ import os
 def initialize_aws_session():
     """Inicializa a sessão AWS usando credenciais seguras."""
     return boto3.Session(
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        aws_access_key_id=os.getenv("ACCESS_ID"),
+        aws_secret_access_key=os.getenv("ACCESS_KEY"),
         region_name="us-east-1"
     )
 
