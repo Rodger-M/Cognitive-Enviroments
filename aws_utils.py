@@ -1,3 +1,5 @@
+import boto3
+
 def initialize_aws_session(access_id, access_key, region):
     return boto3.Session(
         aws_access_key_id=access_id, 
