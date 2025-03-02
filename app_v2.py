@@ -100,25 +100,28 @@ if uploaded_cnh:
 st.subheader("Upload da imagem para comparação")
 uploaded_target = st.file_uploader("Envie a imagem para comparação", type=["jpg", "png", "jpeg"])
 
-if uploaded_target and bytes_face_cnh:
-    bytes_img_target = uploaded_target.read()
-    response_comparison = compare_faces(client_rekognition, bytes_face_cnh, bytes_img_target)
-    
-    image_target = Image.open(uploaded_target)
-    draw = ImageDraw.Draw(image_target)
-    
-    if "FaceMatches" in response_comparison and response_comparison["FaceMatches"]:
-        for match in response_comparison["FaceMatches"]:
-            box = match["Face"]["BoundingBox"]
-            width, height = image_target.size
-            left, top = int(box['Left'] * width), int(box['Top'] * height)
-            box_width, box_height = int(box['Width'] * width), int(box['Height'] * height)
-            draw.rectangle([left, top, left + box_width, top + box_height], outline="green", width=3)
-            draw.text((left, top), f"Similaridade: {match['Similarity']:.2f}%", font=font)
-            st.success(f"Face correspondente encontrada! Similaridade: {match['Similarity']:.2f}%")
-        st.image(image_target, caption="Resultado da Comparação", use_container_width=True)
-    else:
-        st.error("Nenhuma correspondência encontrada.")
+try:
+    if uploaded_target and bytes_face_cnh:
+        bytes_img_target = uploaded_target.read()
+        response_comparison = compare_faces(client_rekognition, bytes_face_cnh, bytes_img_target)
+        
+        image_target = Image.open(uploaded_target)
+        draw = ImageDraw.Draw(image_target)
+
+        if "FaceMatches" in response_comparison and response_comparison["FaceMatches"]:
+            for match in response_comparison["FaceMatches"]:
+                box = match["Face"]["BoundingBox"]
+                width, height = image_target.size
+                left, top = int(box['Left'] * width), int(box['Top'] * height)
+                box_width, box_height = int(box['Width'] * width), int(box['Height'] * height)
+                draw.rectangle([left, top, left + box_width, top + box_height], outline="green", width=3)
+                draw.text((left, top), f"Similaridade: {match['Similarity']:.2f}%", font=font)
+                st.success(f"Face correspondente encontrada! Similaridade: {match['Similarity']:.2f}%")
+            st.image(image_target, caption="Resultado da Comparação", use_container_width=True)
+        else:
+            st.error("Nenhuma correspondência encontrada. Tente uma nova imagem.")
+except Exception as e:
+    st.error(f"Ocorreu um erro: {str(e)}. Tente enviar outra imagem.")
 
 # Upload de comprovante de endereço
 st.subheader("Faça upload do comprovante de endereço:")
