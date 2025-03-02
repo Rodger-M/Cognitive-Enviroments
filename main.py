@@ -1,9 +1,17 @@
 import streamlit as st
 from PIL import Image, ImageDraw
 from functions import (
-    initialize_aws_session, extract_text, detect_faces, crop_face,
+    extract_text, detect_faces, crop_face,
     compare_faces, clean_cpf
 )
+
+def initialize_aws_session():
+    """Inicializa a sessão AWS usando credenciais seguras."""
+    return boto3.Session(
+        aws_access_key_id=os.getenv("ACCESS_ID"),
+        aws_secret_access_key=os.getenv("ACCESS_KEY"),
+        region_name="us-east-1"
+    )
 
 st.title("Validação de Identidade com AWS")
 
