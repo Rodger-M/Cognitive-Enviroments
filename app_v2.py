@@ -65,7 +65,7 @@ st.subheader("Upload da CNH")
 uploaded_cnh = st.file_uploader("Envie a imagem da CNH", type=["jpg", "png", "jpeg"])
 
 if uploaded_cnh:
-    st.image(uploaded_cnh, caption="Imagem enviada", use_column_width=True)
+    st.image(uploaded_cnh, caption="Imagem enviada", use_container_width=True)
     bytes_cnh = uploaded_cnh.read()
     extracted_data = extract_text(client_textract, bytes_cnh)
     
@@ -109,6 +109,6 @@ if uploaded_target and bytes_face_cnh:
             box_width, box_height = int(box['Width'] * width), int(box['Height'] * height)
             draw.rectangle([left, top, left + box_width, top + box_height], outline="green", width=3)
             st.success(f"Face correspondente encontrada! Similaridade: {match['Similarity']:.2f}%")
-        st.image(image_target, caption="Resultado da Comparação", use_column_width=True)
+        st.image(image_target, caption="Resultado da Comparação", use_container_width=True)
     else:
         st.error("Nenhuma correspondência encontrada.")
