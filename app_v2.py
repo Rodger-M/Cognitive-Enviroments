@@ -115,3 +115,51 @@ if uploaded_target and bytes_face_cnh:
         st.image(image_target, caption="Resultado da Comparação", use_container_width=True)
     else:
         st.error("Nenhuma correspondência encontrada.")
+
+# Upload de comprovante de endereço
+st.subheader("Faça upload do comprovante de endereço:")
+uploaded_endereco = st.file_uploader("  ", type=["jpg", "png", "jpeg", "pdf"])
+
+if uploaded_endereco:
+  # Convertendo imagem para bytes
+  img_endereco = uploaded_endereco.read()
+  bytes_endereco = bytearray(img_endereco)
+
+  # Inicializando sessão AWS
+  response_comprovante_text = client_textract.analyze_document(Document={'Bytes': bytes_endereco}, FeatureTypes=['FORMS'])
+  blocks = response_comprovante_text["Blocks"]
+  extracted_data_comprovante = {}
+
+  for block in blocks:
+      if block["BlockType"] == "KEY_VALUE_SET" and "EntityTypes" in block and "KEY" in block["EntityTypes"]:
+          key_text, value_text = "", ""
+
+          for relationship in block.get("Relationships", []):
+              if relationship["Type"] == "CHILD":
+                  key_text = " ".join([t["Text"] for t in blocks if t["Id"] in relationship["Ids"]]).upper()
+              elif relationship["Type"] == "VALUE":
+                  for value_id in relationship["Ids"]:
+                      value_block = next((b for b in blocks if b["Id"] == value_id), None)
+                      if value_block and "Relationships" in value_block:
+                          for child in value_block["Relationships"]:
+                              if child["Type"] == "CHILD":
+                                  value_text = " ".join([t["Text"] for t in blocks if t["Id"] in child["Ids"]]).upper()
+
+          if key_text and value_text:
+              extracted_data_comprovante[key_text] = value_text
+
+  # Exibir resultados extraídos
+  nome_keys = ["NOME", "NOME COMPLETO", "NOME DO TITULAR", "CLIENTE"]  # Possíveis variações
+  nome_comprovante = next((extracted_data_comprovante[key] for key in nome_keys if key in extracted_data_comprovante), "Não encontrado")
+
+  cpf_keys = ["CPF", "DOCUMENTO", "CPF DO TITULAR", "CPF/CNPJ"]
+  cpf_comprovante = next((extracted_data_comprovante[key] for key in cpf_keys if key in extracted_data_comprovante), "Não encontrado")
+  cpf_comprovante = re.sub(r"[.\-/]", "", cpf_comprovante)
+  st.subheader("Texto extraído do comprovante de endereço:")
+  st.text_area("", f"Nome: {nome_comprovante}\nCPF: {cpf_comprovante}", height=68)
+  st.subheader("Resultado:")
+
+  if any(nome_cnh in v for v in extracted_data_comprovante.values()):
+    st.success("As informações coincidem!")
+  else:
+    st.error("As informações não coincidem!")
