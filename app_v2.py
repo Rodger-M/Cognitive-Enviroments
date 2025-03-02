@@ -71,7 +71,7 @@ if uploaded_cnh:
     bytes_cnh = uploaded_cnh.read()
     extracted_data = extract_text(client_textract, bytes_cnh)
 
-    nome_keys = ["NOME", "NOME COMPLETO", "NOME DO TITULAR", "CLIENTE", "2E1 NOME E SOBRENOME"]  # Possíveis variações
+    nome_keys = ["NOME", "NOME COMPLETO", "NOME DO TITULAR", "CLIENTE", "2E1 NOME E SOBRENOME", "PAGADOR"]  # Possíveis variações
     nome_cnh = next((extracted_data[key] for key in nome_keys if key in extracted_data), "Não encontrado")
     
     cpf_keys = ["CPF", "DOCUMENTO", "CPF DO TITULAR", "CPF/CNPJ", "4D CPF"]
@@ -94,7 +94,7 @@ if uploaded_cnh:
         bytes_face_cnh = None
         st.warning("Nenhuma face detectada na CNH.")
     
-    st.text_area("Dados extraídos:", f"Nome: {nome_cnh}\nCPF: {cpf_cnh}", height=70)
+    st.text_area("Dados extraídos:", f"Nome: {nome_cnh}", height=70)
 
 # Upload para comparação
 st.subheader("Upload da imagem para comparação")
