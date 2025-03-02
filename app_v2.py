@@ -7,7 +7,6 @@ from io import BytesIO
 import os
 from PIL import ImageFont
 
-font = ImageFont.truetype("DejaVuSans.ttf", 30) 
 def initialize_aws_session():
     """Inicializa a sessão AWS usando credenciais seguras."""
     return boto3.Session(
@@ -20,26 +19,30 @@ def extract_text(client, image_bytes):
     """Extrai texto de uma imagem usando o Amazon Textract."""
     try:
         response = client.analyze_document(Document={'Bytes': image_bytes}, FeatureTypes=['FORMS'])
-        extracted_data = {}
-        for block in response["Blocks"]:
-            if block["BlockType"] == "KEY_VALUE_SET" and "EntityTypes" in block and "KEY" in block["EntityTypes"]:
-                key_text, value_text = "", ""
-                for rel in block.get("Relationships", []):
-                    if rel["Type"] == "CHILD":
-                        key_text = " ".join([t["Text"] for t in response["Blocks"] if t["Id"] in rel["Ids"]]).upper()
-                    elif rel["Type"] == "VALUE":
-                        for value_id in rel["Ids"]:
-                            value_block = next((b for b in response["Blocks"] if b["Id"] == value_id), None)
-                            if value_block:
-                                for child in value_block.get("Relationships", []):
-                                    if child["Type"] == "CHILD":
-                                        value_text = " ".join([t["Text"] for t in response["Blocks"] if t["Id"] in child["Ids"]]).upper()
-                if key_text and value_text:
-                    extracted_data[key_text] = value_text
-        return extracted_data
+        return parse_extracted_text(response)
     except Exception as e:
         st.error(f"Erro ao extrair texto: {e}")
         return {}
+
+def parse_extracted_text(response):
+    """Processa os dados extraídos do Textract."""
+    extracted_data = {}
+    for block in response["Blocks"]:
+        if block["BlockType"] == "KEY_VALUE_SET" and "EntityTypes" in block and "KEY" in block["EntityTypes"]:
+            key_text, value_text = "", ""
+            for rel in block.get("Relationships", []):
+                if rel["Type"] == "CHILD":
+                    key_text = " ".join([t["Text"] for t in response["Blocks"] if t["Id"] in rel["Ids"]]).upper()
+                elif rel["Type"] == "VALUE":
+                    for value_id in rel["Ids"]:
+                        value_block = next((b for b in response["Blocks"] if b["Id"] == value_id), None)
+                        if value_block:
+                            for child in value_block.get("Relationships", []):
+                                if child["Type"] == "CHILD":
+                                    value_text = " ".join([t["Text"] for t in response["Blocks"] if t["Id"] in child["Ids"]]).upper()
+            if key_text and value_text:
+                extracted_data[key_text] = value_text
+    return extracted_data
 
 def detect_faces(client, image_bytes):
     """Detecta rostos em uma imagem usando o Amazon Rekognition."""
@@ -57,6 +60,10 @@ def compare_faces(client, source_bytes, target_bytes):
         st.error(f"Erro ao comparar rostos: {e}")
         return {}
 
+def extract_relevant_info(extracted_data, keys):
+    """Extrai informações relevantes de um conjunto de dados extraído."""
+    return next((extracted_data[key] for key in keys if key in extracted_data), "Não encontrado")
+
 st.title("Validação de Identidade com AWS")
 session = initialize_aws_session()
 client_textract = session.client("textract")
@@ -70,12 +77,12 @@ if uploaded_cnh:
     st.image(uploaded_cnh, caption="Imagem enviada", use_container_width=True)
     bytes_cnh = uploaded_cnh.read()
     extracted_data = extract_text(client_textract, bytes_cnh)
-
-    nome_keys = ["NOME", "NOME COMPLETO", "NOME DO TITULAR", "CLIENTE", "2E1 NOME E SOBRENOME", "PAGADOR"]  # Possíveis variações
-    nome_cnh = next((extracted_data[key] for key in nome_keys if key in extracted_data), "Não encontrado")
     
+    nome_keys = ["NOME", "NOME COMPLETO", "NOME DO TITULAR", "CLIENTE", "2E1 NOME E SOBRENOME", "PAGADOR"]
     cpf_keys = ["CPF", "DOCUMENTO", "CPF DO TITULAR", "CPF/CNPJ", "4D CPF"]
-    cpf_cnh = next((extracted_data[key] for key in cpf_keys if key in extracted_data), "Não encontrado")
+    
+    nome_cnh = extract_relevant_info(extracted_data, nome_keys)
+    cpf_cnh = extract_relevant_info(extracted_data, cpf_keys)
     cpf_cnh = re.sub(r"[.\-/]", "", cpf_cnh)
     
     response_faces = detect_faces(client_rekognition, bytes_cnh)
@@ -103,20 +110,8 @@ uploaded_target = st.file_uploader("Envie a imagem para comparação", type=["jp
 if uploaded_target and bytes_face_cnh:
     bytes_img_target = uploaded_target.read()
     response_comparison = compare_faces(client_rekognition, bytes_face_cnh, bytes_img_target)
-    
-    image_target = Image.open(uploaded_target)
-    draw = ImageDraw.Draw(image_target)
-    
     if "FaceMatches" in response_comparison and response_comparison["FaceMatches"]:
-        for match in response_comparison["FaceMatches"]:
-            box = match["Face"]["BoundingBox"]
-            width, height = image_target.size
-            left, top = int(box['Left'] * width), int(box['Top'] * height)
-            box_width, box_height = int(box['Width'] * width), int(box['Height'] * height)
-            draw.rectangle([left, top, left + box_width, top + box_height], outline="green", width=3)
-            draw.text((left, top), f"Similaridade: {match['Similarity']:.2f}%", font=font)
-            st.success(f"Face correspondente encontrada! Similaridade: {match['Similarity']:.2f}%")
-        st.image(image_target, caption="Resultado da Comparação", use_container_width=True)
+        st.success(f"Face correspondente encontrada! Similaridade: {response_comparison['FaceMatches'][0]['Similarity']:.2f}%")
     else:
         st.error("Nenhuma correspondência encontrada.")
 
@@ -125,43 +120,13 @@ st.subheader("Faça upload do comprovante de endereço:")
 uploaded_endereco = st.file_uploader("  ", type=["jpg", "png", "jpeg", "pdf"])
 
 if uploaded_endereco:
-  # Convertendo imagem para bytes
-  img_endereco = uploaded_endereco.read()
-  bytes_endereco = bytearray(img_endereco)
-
-  # Inicializando sessão AWS
-  response_comprovante_text = client_textract.analyze_document(Document={'Bytes': bytes_endereco}, FeatureTypes=['FORMS'])
-  blocks = response_comprovante_text["Blocks"]
-  extracted_data_comprovante = {}
-
-  for block in blocks:
-      if block["BlockType"] == "KEY_VALUE_SET" and "EntityTypes" in block and "KEY" in block["EntityTypes"]:
-          key_text, value_text = "", ""
-
-          for relationship in block.get("Relationships", []):
-              if relationship["Type"] == "CHILD":
-                  key_text = " ".join([t["Text"] for t in blocks if t["Id"] in relationship["Ids"]]).upper()
-              elif relationship["Type"] == "VALUE":
-                  for value_id in relationship["Ids"]:
-                      value_block = next((b for b in blocks if b["Id"] == value_id), None)
-                      if value_block and "Relationships" in value_block:
-                          for child in value_block["Relationships"]:
-                              if child["Type"] == "CHILD":
-                                  value_text = " ".join([t["Text"] for t in blocks if t["Id"] in child["Ids"]]).upper()
-
-          if key_text and value_text:
-              extracted_data_comprovante[key_text] = value_text
-
-  # Exibir resultados extraídos
-  nome_comprovante = next((extracted_data_comprovante[key] for key in nome_keys if key in extracted_data_comprovante), "Não encontrado")
-
-  cpf_comprovante = next((extracted_data_comprovante[key] for key in cpf_keys if key in extracted_data_comprovante), "Não encontrado")
-  cpf_comprovante = re.sub(r"[.\-/]", "", cpf_comprovante)
-  st.subheader("Texto extraído do comprovante de endereço:")
-  st.text_area("", f"Nome: {nome_comprovante}", height=68)
-  st.subheader("Resultado:")
-
-  if any(nome_cnh in v for v in extracted_data_comprovante.values()):
-    st.success("As informações coincidem!")
-  else:
-    st.error("As informações não coincidem!")
+    img_endereco = uploaded_endereco.read()
+    extracted_data_comprovante = extract_text(client_textract, img_endereco)
+    nome_comprovante = extract_relevant_info(extracted_data_comprovante, nome_keys)
+    st.subheader("Texto extraído do comprovante de endereço:")
+    st.text_area("", f"Nome: {nome_comprovante}", height=68)
+    st.subheader("Resultado:")
+    if nome_cnh in extracted_data_comprovante.values():
+        st.success("As informações coincidem!")
+    else:
+        st.error("As informações não coincidem!")
