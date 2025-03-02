@@ -7,7 +7,7 @@ def initialize_aws_session(access_id, access_key, region):
     return boto3.Session(
         aws_access_key_id=access_id, 
         aws_secret_access_key=access_key, 
-        region_name=region
+        region_name=="us-east-1"
     )
 
 def extract_text(client_textract, image_bytes):
