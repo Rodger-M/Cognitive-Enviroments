@@ -3,9 +3,12 @@ import boto3
 from io import BytesIO
 from PIL import Image, ImageDraw
 
-def initialize_aws_session():
-    """Inicializa a sessão AWS."""
-    return boto3.Session()
+def initialize_aws_session(access_id, access_key, region):
+    return boto3.Session(
+        aws_access_key_id=access_id, 
+        aws_secret_access_key=access_key, 
+        region_name=region
+    )
 
 def extract_text(client_textract, image_bytes):
     """Extrai texto da imagem utilizando o Textract."""
