@@ -57,6 +57,9 @@ def compare_faces(client, source_bytes, target_bytes):
         st.error(f"Erro ao comparar rostos: {e}")
         return {}
 
+nome_keys = ["NOME", "NOME COMPLETO", "NOME DO TITULAR", "CLIENTE", "2E1 NOME E SOBRENOME", "PAGADOR"]  # Possíveis variações
+cpf_keys = ["CPF", "DOCUMENTO", "CPF DO TITULAR", "CPF/CNPJ", "4D CPF"]
+
 st.title("Validação de Identidade com AWS")
 session = initialize_aws_session()
 client_textract = session.client("textract")
@@ -71,10 +74,8 @@ if uploaded_cnh:
     bytes_cnh = uploaded_cnh.read()
     extracted_data = extract_text(client_textract, bytes_cnh)
 
-    nome_keys = ["NOME", "NOME COMPLETO", "NOME DO TITULAR", "CLIENTE", "2E1 NOME E SOBRENOME", "PAGADOR"]  # Possíveis variações
     nome_cnh = next((extracted_data[key] for key in nome_keys if key in extracted_data), "Não encontrado")
     
-    cpf_keys = ["CPF", "DOCUMENTO", "CPF DO TITULAR", "CPF/CNPJ", "4D CPF"]
     cpf_cnh = next((extracted_data[key] for key in cpf_keys if key in extracted_data), "Não encontrado")
     cpf_cnh = re.sub(r"[.\-/]", "", cpf_cnh)
     
@@ -155,12 +156,15 @@ if uploaded_endereco:
               extracted_data_comprovante[key_text] = value_text
 
   # Exibir resultados extraídos
-  nome_comprovante = next((extracted_data_comprovante[key] for key in nome_keys if key in extracted_data_comprovante), "Não encontrado")
+  endereco_comprovante = next(
+    (value for key, value in extracted_data_comprovante.items() if "ENDEREÇO" in key.upper()), 
+    (value for key, value in extracted_data_comprovante.items() if "ENDERECO" in key.upper()),   
+    (value for key, value in extracted_data_comprovante.items() if "LOGRADOURO" in key.upper()), 
+    "NÃO ENCONTRADO"
+  )
 
-  cpf_comprovante = next((extracted_data_comprovante[key] for key in cpf_keys if key in extracted_data_comprovante), "Não encontrado")
-  cpf_comprovante = re.sub(r"[.\-/]", "", cpf_comprovante)
   st.subheader("Texto extraído do comprovante de endereço:")
-  st.text_area("", f"Nome: {nome_comprovante}", height=68)
+  st.text_area("", f"Endereço: {endereco_comprovante}", height=68)
   st.subheader("Resultado:")
 
   if any(nome_cnh in v for v in extracted_data_comprovante.values()):
