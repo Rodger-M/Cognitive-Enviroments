@@ -137,14 +137,14 @@ if uploaded_endereco:
   blocks = response_comprovante_text["Blocks"]
   extracted_data_comprovante = {}
 
-  for block in blocks:
+for block in blocks:
     if block["BlockType"] == "KEY_VALUE_SET" and "EntityTypes" in block and "KEY" in block["EntityTypes"]:
-        key_texts = []
-        value_texts = []
+        key_text = ""
+        value_text = ""
 
         for relationship in block.get("Relationships", []):
             if relationship["Type"] == "CHILD":
-                key_texts = [t["Text"].upper() for t in blocks if t["Id"] in relationship["Ids"]]
+                key_text = " ".join([t["Text"] for t in blocks if t["Id"] in relationship["Ids"]]).upper()
 
             if relationship["Type"] == "VALUE":
                 for value_id in relationship["Ids"]:
@@ -152,11 +152,11 @@ if uploaded_endereco:
                     if value_block and "Relationships" in value_block:
                         for child in value_block["Relationships"]:
                             if child["Type"] == "CHILD":
-                                value_texts = [t["Text"].upper() for t in blocks if t["Id"] in child["Ids"]]
+                                value_text = " ".join([t["Text"] for t in blocks if t["Id"] in child["Ids"]]).upper()
 
-        # Se houver múltiplas linhas, tratamos cada linha como uma chave-valor separada
-        for key, value in zip(key_texts, value_texts):
-            extracted_data[key] = value
+        # Armazena os valores extraídos
+        if key_text and value_text:
+            extracted_data[key_text] = value_text
 
   # Exibir resultados extraídos
   endereco_comprovante = next(
