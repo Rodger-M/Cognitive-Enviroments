@@ -135,45 +135,35 @@ if uploaded_endereco:
   # Inicializando sessão AWS
   response_comprovante_text = client_textract.analyze_document(Document={'Bytes': bytes_endereco}, FeatureTypes=['FORMS'])
   blocks = response_comprovante_text["Blocks"]
-  extracted_data_comprovante = {}
+  extracted_data_comprovante_line = {}
 
-  for block in blocks:
-    if block["BlockType"] == "KEY_VALUE_SET" and "EntityTypes" in block and "KEY" in block["EntityTypes"]:
-        key_text = ""
-        value_text = ""
+for block in blocks:
+    if block["BlockType"] == "LINE":
+        texto_linha = block.get("Text", "").strip().upper()  # Obtém e padroniza o texto
+        if texto_linha:
+            extracted_data_comprovante_line[block["Id"]] = texto_linha  # Usa o ID como chave para garantir unicidade
 
-        for relationship in block.get("Relationships", []):
-            if relationship["Type"] == "CHILD":
-                key_text = " ".join([t["Text"] for t in blocks if t["Id"] in relationship["Ids"]]).upper()
+# Palavras-chave relacionadas a endereços
+keywords_endereco = ["RUA", "AVENIDA", "AV.", "LOGRADOURO", "ENDEREÇO"]
 
-            if relationship["Type"] == "VALUE":
-                for value_id in relationship["Ids"]:
-                    value_block = next((b for b in blocks if b["Id"] == value_id), None)
-                    if value_block and "Relationships" in value_block:
-                        for child in value_block["Relationships"]:
-                            if child["Type"] == "CHILD":
-                                value_text = " ".join([t["Text"] for t in blocks if t["Id"] in child["Ids"]]).upper()
+# Expressões regulares para padrões comuns
+regex_cep = re.compile(r"\b\d{5}-\d{3}\b")  # Ex: 12345-678
+regex_endereco = re.compile(r"\b(?:RUA|AVENIDA|AV\.|LOGRADOURO|ENDEREÇO)\b", re.IGNORECASE)
 
-        # Armazena os valores extraídos
-        if key_text and value_text:
-            extracted_data_comprovante[key_text] = value_text
+enderecos_encontrados = {}
 
-  endereco_comprovante = next(
-    (value for key, value in extracted_data_comprovante.items() if "ENDEREÇO" in key.upper()), 
-    next(
-        (value for key, value in extracted_data_comprovante.items() if "ENDERECO" in key.upper()), 
-        next(
-            (value for key, value in extracted_data_comprovante.items() if "LOGRADOURO" in key.upper()), 
-            "NÃO ENCONTRADO"
-            )
-        )
-  )
+for key, value in extracted_data_comprovante_line.items():
+    if any(keyword in value for keyword in keywords_endereco) or regex_cep.search(value) or regex_endereco.search(value):
+        enderecos_encontrados[key] = value
+
+# Exibir os endereços encontrados
+st.text_area("Endereços encontrados", "\n".join(enderecos_encontrados.values()))
 
   st.subheader("Texto extraído do comprovante de endereço:")
   st.text_area("", f"Endereço: {endereco_comprovante}", height=68)
   st.subheader("Resultado:")
 
-  if any(nome_cnh in v for v in extracted_data_comprovante.values()):
+  if any(nome_cnh in v for v in extracted_data_comprovante_line.values()):
     st.success("As informações coincidem!")
   else:
     st.error("As informações não coincidem!")
