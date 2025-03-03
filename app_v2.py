@@ -156,14 +156,14 @@ if uploaded_endereco:
 
         # Armazena os valores extraídos
         if key_text and value_text:
-            extracted_data[key_text] = value_text
+            extracted_data_comprovante[key_text] = value_text
 
   endereco_comprovante = next(
-    (value for key, value in extracted_data.items() if "ENDEREÇO" in key.upper()), 
+    (value for key, value in extracted_data_comprovante.items() if "ENDEREÇO" in key.upper()), 
     next(
-        (value for key, value in extracted_data.items() if "ENDERECO" in key.upper()), 
+        (value for key, value in extracted_data_comprovante.items() if "ENDERECO" in key.upper()), 
         next(
-            (value for key, value in extracted_data.items() if "LOGRADOURO" in key.upper()), 
+            (value for key, value in extracted_data_comprovante.items() if "LOGRADOURO" in key.upper()), 
             "NÃO ENCONTRADO"
             )
         )
