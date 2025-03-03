@@ -129,13 +129,13 @@ st.subheader("Faça upload do comprovante de endereço:")
 uploaded_endereco = st.file_uploader("  ", type=["jpg", "png", "jpeg", "pdf"])
 
 if uploaded_endereco:
-  # Convertendo imagem para bytes
-  img_endereco = uploaded_endereco.read()
-  bytes_endereco = bytearray(img_endereco)
-  # Inicializando sessão AWS
-  response_comprovante_text = client_textract.analyze_document(Document={'Bytes': bytes_endereco}, FeatureTypes=['FORMS'])
-  blocks = response_comprovante_text["Blocks"]
-  extracted_data_comprovante_line = {}
+    # Convertendo imagem para bytes
+    img_endereco = uploaded_endereco.read()
+    bytes_endereco = bytearray(img_endereco)
+    # Inicializando sessão AWS
+    response_comprovante_text = client_textract.analyze_document(Document={'Bytes': bytes_endereco}, FeatureTypes=['FORMS'])
+    blocks = response_comprovante_text["Blocks"]
+    extracted_data_comprovante_line = {}
 
     for block in blocks:
         if block["BlockType"] == "LINE":
