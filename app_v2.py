@@ -137,33 +137,33 @@ if uploaded_endereco:
   blocks = response_comprovante_text["Blocks"]
   extracted_data_comprovante_line = {}
 
-for block in blocks:
-    if block["BlockType"] == "LINE":
-        texto_linha = block.get("Text", "").strip().upper()  # Obtém e padroniza o texto
-        if texto_linha:
-            extracted_data_comprovante_line[block["Id"]] = texto_linha  # Usa o ID como chave para garantir unicidade
-
-# Palavras-chave relacionadas a endereços
-keywords_endereco = ["RUA", "AVENIDA", "AV.", "LOGRADOURO", "ENDEREÇO"]
-
-# Expressões regulares para padrões comuns
-regex_cep = re.compile(r"\b\d{5}-\d{3}\b")  # Ex: 12345-678
-regex_endereco = re.compile(r"\b(?:RUA|AVENIDA|AV\.|LOGRADOURO|ENDEREÇO)\b", re.IGNORECASE)
-
-enderecos_encontrados = {}
-
-for key, value in extracted_data_comprovante_line.items():
-    if any(keyword in value for keyword in keywords_endereco) or regex_cep.search(value) or regex_endereco.search(value):
-        enderecos_encontrados[key] = value
-
-# Exibir os endereços encontrados
-st.text_area("Endereços encontrados", "\n".join(enderecos_encontrados.values()))
-
-  st.subheader("Texto extraído do comprovante de endereço:")
-  st.text_area("", f"Endereço: {endereco_comprovante}", height=68)
-  st.subheader("Resultado:")
-
-  if any(nome_cnh in v for v in extracted_data_comprovante_line.values()):
+    for block in blocks:
+        if block["BlockType"] == "LINE":
+            texto_linha = block.get("Text", "").strip().upper()  # Obtém e padroniza o texto
+            if texto_linha:
+                extracted_data_comprovante_line[block["Id"]] = texto_linha  # Usa o ID como chave para garantir unicidade
+    
+    # Palavras-chave relacionadas a endereços
+    keywords_endereco = ["RUA", "AVENIDA", "AV.", "LOGRADOURO", "ENDEREÇO"]
+    
+    # Expressões regulares para padrões comuns
+    regex_cep = re.compile(r"\b\d{5}-\d{3}\b")  # Ex: 12345-678
+    regex_endereco = re.compile(r"\b(?:RUA|AVENIDA|AV\.|LOGRADOURO|ENDEREÇO)\b", re.IGNORECASE)
+    
+    enderecos_encontrados = {}
+    
+    for key, value in extracted_data_comprovante_line.items():
+        if any(keyword in value for keyword in keywords_endereco) or regex_cep.search(value) or regex_endereco.search(value):
+            enderecos_encontrados[key] = value
+    
+    # Exibir os endereços encontrados
+    st.text_area("Endereços encontrados", "\n".join(enderecos_encontrados.values()))
+    
+    st.subheader("Texto extraído do comprovante de endereço:")
+    st.text_area("", f"Endereço: {endereco_comprovante}", height=68)
+    st.subheader("Resultado:")
+    
+    if any(nome_cnh in v for v in extracted_data_comprovante_line.values()):
     st.success("As informações coincidem!")
-  else:
+    else:
     st.error("As informações não coincidem!")
