@@ -116,7 +116,7 @@ try:
                 left, top = int(box['Left'] * width), int(box['Top'] * height)
                 box_width, box_height = int(box['Width'] * width), int(box['Height'] * height)
                 draw.rectangle([left, top, left + box_width, top + box_height], outline="green", width=3)
-                draw.text((left, top), f"Similaridade: {match['Similarity']:.2f}%", font=font)
+                #draw.text((left, top), f"Similaridade: {match['Similarity']:.2f}%", font=font)
                 st.success(f"Face correspondente encontrada! Similaridade: {match['Similarity']:.2f}%")
             st.image(image_target, caption="Resultado da Comparação", use_container_width=True)
         else:
@@ -157,10 +157,8 @@ if uploaded_endereco:
             enderecos_encontrados[key] = value
     
     # Exibir os endereços encontrados
-    st.text_area("Endereços encontrados", "\n".join(enderecos_encontrados.values()))
-    
     st.subheader("Texto extraído do comprovante de endereço:")
-    st.text_area("", f"Endereço: {endereco_comprovante}", height=68)
+    st.text_area("Endereços encontrados", "\n".join(enderecos_encontrados.values()))
     st.subheader("Resultado:")
     
     if any(nome_cnh in v for v in extracted_data_comprovante_line.values()):
