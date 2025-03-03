@@ -137,26 +137,26 @@ if uploaded_endereco:
   blocks = response_comprovante_text["Blocks"]
   extracted_data_comprovante = {}
 
-for block in blocks:
-    if block["BlockType"] == "KEY_VALUE_SET" and "EntityTypes" in block and "KEY" in block["EntityTypes"]:
-        key_text = ""
-        value_text = ""
-
-        for relationship in block.get("Relationships", []):
-            if relationship["Type"] == "CHILD":
-                key_text = " ".join([t["Text"] for t in blocks if t["Id"] in relationship["Ids"]]).upper()
-
-            if relationship["Type"] == "VALUE":
-                for value_id in relationship["Ids"]:
-                    value_block = next((b for b in blocks if b["Id"] == value_id), None)
-                    if value_block and "Relationships" in value_block:
-                        for child in value_block["Relationships"]:
-                            if child["Type"] == "CHILD":
-                                value_text = " ".join([t["Text"] for t in blocks if t["Id"] in child["Ids"]]).upper()
-
-        # Armazena os valores extraídos
-        if key_text and value_text:
-            extracted_data[key_text] = value_text
+    for block in blocks:
+        if block["BlockType"] == "KEY_VALUE_SET" and "EntityTypes" in block and "KEY" in block["EntityTypes"]:
+            key_text = ""
+            value_text = ""
+    
+            for relationship in block.get("Relationships", []):
+                if relationship["Type"] == "CHILD":
+                    key_text = " ".join([t["Text"] for t in blocks if t["Id"] in relationship["Ids"]]).upper()
+    
+                if relationship["Type"] == "VALUE":
+                    for value_id in relationship["Ids"]:
+                        value_block = next((b for b in blocks if b["Id"] == value_id), None)
+                        if value_block and "Relationships" in value_block:
+                            for child in value_block["Relationships"]:
+                                if child["Type"] == "CHILD":
+                                    value_text = " ".join([t["Text"] for t in blocks if t["Id"] in child["Ids"]]).upper()
+    
+            # Armazena os valores extraídos
+            if key_text and value_text:
+                extracted_data[key_text] = value_text
 
   # Exibir resultados extraídos
   endereco_comprovante = next(
