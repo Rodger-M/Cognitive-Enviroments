@@ -158,9 +158,13 @@ if uploaded_endereco:
   # Exibir resultados extraídos
   endereco_comprovante = next(
     (value for key, value in extracted_data_comprovante.items() if "ENDEREÇO" in key.upper()), 
-    (value for key, value in extracted_data_comprovante.items() if "ENDERECO" in key.upper()),   
-    (value for key, value in extracted_data_comprovante.items() if "LOGRADOURO" in key.upper()), 
-    "NÃO ENCONTRADO"
+    next(
+        (value for key, value in extracted_data_comprovante.items() if "ENDERECO" in key.upper()), 
+        next(
+            (value for key, value in extracted_data_comprovante.items() if "LOGRADOURO" in key.upper()), 
+            "NÃO ENCONTRADO"
+            )
+        )
   )
 
   st.subheader("Texto extraído do comprovante de endereço:")
