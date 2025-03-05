@@ -162,6 +162,6 @@ if uploaded_endereco:
     st.subheader("Resultado:")
     
     if any(nome_cnh in v for v in extracted_data_comprovante_line.values()):
-        st.success("As informações coincidem!")
+        st.success("O nome do documento coincide com o comprovante de endereço!")
     else:
-        st.error("As informações não coincidem!")
+        st.error("O nome do documento não coincide com o comprovante de endereço!")
